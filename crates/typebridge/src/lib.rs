@@ -67,6 +67,7 @@
 
 pub mod bridge;
 pub mod check;
+pub mod cli;
 pub mod command;
 pub mod diagnostics;
 pub mod ir;

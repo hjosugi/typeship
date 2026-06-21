@@ -1,0 +1,22 @@
+[package]
+name = "typebridge-ts-rs"
+version = "0.0.0"
+description = "ts-rs backend adapter for typebridge: lower `#[derive(TS)]` Rust types into typebridge declarations the Bridge can assemble, check, and write."
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+# ts-rs 12 requires a newer toolchain than the dependency-free core crate.
+rust-version = "1.78.0"
+readme = "README.md"
+keywords = ["typescript", "codegen", "ts-rs", "serde", "tauri"]
+categories = ["development-tools"]
+
+[dependencies]
+typebridge = { path = "../typebridge" }
+ts-rs = "12"
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+

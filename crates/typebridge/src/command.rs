@@ -43,6 +43,8 @@ pub struct Arg {
     pub name: String,
     /// The argument's type.
     pub ty: TsType,
+    /// Emit `name?: T` in the generated TypeScript function signature.
+    pub optional: bool,
 }
 
 impl Arg {
@@ -51,6 +53,7 @@ impl Arg {
         Arg {
             name: name.into(),
             ty,
+            optional: false,
         }
     }
 
@@ -58,6 +61,12 @@ impl Arg {
     /// derived through the naming isomorphism.
     pub fn rust(rust_name: &str, ty: TsType) -> Self {
         Arg::new(to_camel_case(rust_name), ty)
+    }
+
+    /// Mark this argument optional in the generated function signature.
+    pub fn optional(mut self) -> Self {
+        self.optional = true;
+        self
     }
 }
 
@@ -123,7 +132,10 @@ impl Command {
         let params = self
             .args
             .iter()
-            .map(|a| format!("{}: {}", a.name, a.ty.render()))
+            .map(|a| {
+                let opt = if a.optional { "?" } else { "" };
+                format!("{}{opt}: {}", a.name, a.ty.render())
+            })
             .collect::<Vec<_>>()
             .join(", ");
 
@@ -145,7 +157,7 @@ impl Command {
         let key = &self.rust_name;
 
         let body = match transport {
-            Transport::Tauri => format!("  return invoke(\"{key}\"{payload});"),
+            Transport::Tauri => format!("  return invoke<{ret}>(\"{key}\"{payload});"),
             Transport::Fetch => format!("  return request(\"{key}\"{payload});"),
         };
 
@@ -172,7 +184,7 @@ mod tests {
             "{ts}"
         );
         assert!(
-            ts.contains("return invoke(\"workspace_snapshot\");"),
+            ts.contains("return invoke<WorkspaceSnapshot>(\"workspace_snapshot\");"),
             "{ts}"
         );
     }
@@ -189,7 +201,28 @@ mod tests {
         );
         // snake key preserved for the transport, camel keys in the payload.
         assert!(
-            ts.contains("return invoke(\"run_query\", { connectionId, sql });"),
+            ts.contains("return invoke<QueryResult>(\"run_query\", { connectionId, sql });"),
+            "{ts}"
+        );
+    }
+
+    #[test]
+    fn optional_arguments_become_optional_params() {
+        let ts = Command::new("db_run_query", "QueryResult")
+            .arg(Arg::rust("connection_id", TsType::string()))
+            .arg(Arg::new("sql", TsType::string()))
+            .arg(Arg::rust("max_rows", TsType::number()).optional())
+            .render(Transport::Tauri);
+        assert!(
+            ts.contains(
+                "export function dbRunQuery(connectionId: string, sql: string, maxRows?: number): Promise<QueryResult> {"
+            ),
+            "{ts}"
+        );
+        assert!(
+            ts.contains(
+                "return invoke<QueryResult>(\"db_run_query\", { connectionId, sql, maxRows });"
+            ),
             "{ts}"
         );
     }

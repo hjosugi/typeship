@@ -123,4 +123,60 @@ mod tests {
             other => panic!("expected drift, got {other:?}"),
         }
     }
+
+    #[test]
+    fn committed_has_extra_trailing_lines() {
+        // Expected ends sooner than the committed file.
+        let outcome = CheckOutcome::compare("a.ts", "x\n", Some("x\nextra\n"));
+        match outcome {
+            CheckOutcome::Drift {
+                first_diff_line,
+                committed,
+                expected,
+                ..
+            } => {
+                assert_eq!(first_diff_line, 2);
+                assert_eq!(committed.as_deref(), Some("extra"));
+                assert_eq!(expected, None);
+            }
+            other => panic!("expected drift, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn committed_is_truncated() {
+        // Committed file is missing trailing lines the fresh render has.
+        let outcome = CheckOutcome::compare("a.ts", "x\ny\nz\n", Some("x\n"));
+        match outcome {
+            CheckOutcome::Drift {
+                first_diff_line,
+                committed,
+                expected,
+                ..
+            } => {
+                assert_eq!(first_diff_line, 2);
+                assert_eq!(committed, None);
+                assert_eq!(expected.as_deref(), Some("y"));
+            }
+            other => panic!("expected drift, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn trailing_newline_only_difference_is_drift() {
+        // Byte-unequal even though every line matches: still drift, never up-to-date.
+        let outcome = CheckOutcome::compare("a.ts", "x\ny\n", Some("x\ny"));
+        assert!(!outcome.is_up_to_date());
+        assert!(matches!(outcome, CheckOutcome::Drift { .. }));
+    }
+
+    #[test]
+    fn summary_strings_are_actionable() {
+        assert!(CheckOutcome::compare("a.ts", "x\n", None)
+            .summary()
+            .contains("run the generator"));
+        assert!(CheckOutcome::compare("a.ts", "x\n", Some("y\n"))
+            .summary()
+            .contains("line 1"));
+    }
 }

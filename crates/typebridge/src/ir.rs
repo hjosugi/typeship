@@ -75,6 +75,17 @@ impl TsType {
         TsType::Named("boolean".into())
     }
 
+    /// The `bigint` primitive — the right target for Rust `u64`/`i64`/`u128`,
+    /// whose range exceeds JavaScript's `number` (safe-integer) precision.
+    pub fn bigint() -> Self {
+        TsType::Named("bigint".into())
+    }
+
+    /// The `void` type — a command that resolves with no value (Rust `()`).
+    pub fn void() -> Self {
+        TsType::Named("void".into())
+    }
+
     /// `T[]`.
     pub fn array(inner: TsType) -> Self {
         TsType::Array(Box::new(inner))
@@ -247,6 +258,13 @@ pub enum DeclBody {
     Alias(TsType),
     /// `export interface Name { … }`
     Interface(Vec<Field>),
+    /// A pre-rendered declaration string, emitted verbatim.
+    ///
+    /// This is the backend seam: a per-type renderer (`ts-rs`, `specta`, …) lowers
+    /// a Rust type into a finished `export …` line, and typebridge assembles around
+    /// it without reinterpreting its formatting. The string is expected to be a
+    /// complete, `export`-prefixed declaration (no surrounding blank lines).
+    Raw(String),
 }
 
 /// A top-level TypeScript declaration: a named type a consumer can import.
@@ -284,6 +302,21 @@ impl Decl {
         }
     }
 
+    /// A declaration rendered by a backend, wrapped verbatim.
+    ///
+    /// `name` is the bare type name (used for ordering and diagnostics); `rendered`
+    /// is the finished `export …` string the backend produced — see
+    /// [`DeclBody::Raw`]. A trailing newline is normalised away so the
+    /// [`crate::Bridge`] controls spacing.
+    pub fn raw(name: impl Into<String>, rendered: impl Into<String>) -> Self {
+        let rendered = rendered.into();
+        Decl {
+            name: name.into(),
+            body: DeclBody::Raw(rendered.trim_end().to_string()),
+            docs: None,
+        }
+    }
+
     /// Attach a doc comment, rendered above the declaration.
     pub fn with_docs(mut self, docs: impl Into<String>) -> Self {
         self.docs = Some(docs.into());
@@ -308,6 +341,10 @@ impl Decl {
                 }
                 out.push_str("}\n");
             }
+            DeclBody::Raw(rendered) => {
+                out.push_str(rendered);
+                out.push('\n');
+            }
         }
         out
     }
@@ -327,6 +364,19 @@ mod tests {
             "Record<string, number>"
         );
         assert_eq!(TsType::unknown().render(), "unknown");
+    }
+
+    #[test]
+    fn raw_decl_is_emitted_verbatim_with_one_newline() {
+        // A backend hands us a finished line (here in ts-rs's single-line style).
+        let decl = Decl::raw(
+            "DbObject",
+            "export type DbObject = { name: string, kind: DbObjectKind, rows?: string, };\n",
+        );
+        assert_eq!(
+            decl.render(),
+            "export type DbObject = { name: string, kind: DbObjectKind, rows?: string, };\n"
+        );
     }
 
     #[test]
