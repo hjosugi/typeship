@@ -13,6 +13,7 @@
 
 use crate::ir::TsType;
 use crate::naming::to_camel_case;
+use crate::ts::string_literal;
 
 /// How a [`Command`] reaches the backend.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -127,38 +128,42 @@ impl Command {
         to_camel_case(&self.rust_name)
     }
 
-    /// Render the typed wrapper for the given transport, terminated by a newline.
-    pub fn render(&self, transport: Transport) -> String {
-        let params = self
-            .args
+    fn render_params(&self) -> String {
+        self.args
             .iter()
-            .map(|a| {
-                let opt = if a.optional { "?" } else { "" };
-                format!("{}{opt}: {}", a.name, a.ty.render())
+            .map(|arg| {
+                let opt = if arg.optional { "?" } else { "" };
+                format!("{}{opt}: {}", arg.name, arg.ty.render())
             })
             .collect::<Vec<_>>()
+            .join(", ")
+    }
+
+    fn render_payload_suffix(&self) -> String {
+        if self.args.is_empty() {
+            return String::new();
+        }
+
+        let keys = self
+            .args
+            .iter()
+            .map(|arg| arg.name.as_str())
+            .collect::<Vec<_>>()
             .join(", ");
+        format!(", {{ {keys} }}")
+    }
 
-        // The payload object passed to the transport, if there are args.
-        let payload = if self.args.is_empty() {
-            String::new()
-        } else {
-            let keys = self
-                .args
-                .iter()
-                .map(|a| a.name.as_str())
-                .collect::<Vec<_>>()
-                .join(", ");
-            format!(", {{ {keys} }}")
-        };
-
+    /// Render the typed wrapper for the given transport, terminated by a newline.
+    pub fn render(&self, transport: Transport) -> String {
+        let params = self.render_params();
+        let payload = self.render_payload_suffix();
         let ret = self.ret.render();
         let name = self.ts_name();
-        let key = &self.rust_name;
+        let key = string_literal(&self.rust_name);
 
         let body = match transport {
-            Transport::Tauri => format!("  return invoke<{ret}>(\"{key}\"{payload});"),
-            Transport::Fetch => format!("  return request(\"{key}\"{payload});"),
+            Transport::Tauri => format!("  return invoke<{ret}>({key}{payload});"),
+            Transport::Fetch => format!("  return request({key}{payload});"),
         };
 
         let mut out = String::new();
@@ -231,5 +236,14 @@ mod tests {
     fn fetch_transport_uses_request_helper() {
         let ts = Command::new("ping", "boolean").render(Transport::Fetch);
         assert!(ts.contains("return request(\"ping\");"), "{ts}");
+    }
+
+    #[test]
+    fn transport_key_is_escaped_as_a_ts_string_literal() {
+        let ts = Command::new("quote\"slash\\", "boolean").render(Transport::Tauri);
+        assert!(
+            ts.contains("return invoke<boolean>(\"quote\\\"slash\\\\\");"),
+            "{ts}"
+        );
     }
 }

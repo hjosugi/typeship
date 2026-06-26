@@ -20,6 +20,7 @@
 //! away the totality guarantee that makes sum types worth sharing.
 
 use crate::naming::to_camel_case;
+use crate::ts::string_literal;
 
 /// A TypeScript type expression.
 ///
@@ -145,7 +146,7 @@ impl TsType {
                 } else {
                     values
                         .iter()
-                        .map(|v| format!("\"{v}\""))
+                        .map(|v| string_literal(v))
                         .collect::<Vec<_>>()
                         .join(" | ")
                 }
@@ -393,6 +394,14 @@ mod tests {
             "never"
         );
         assert_eq!(TsType::union(Vec::<TsType>::new()).render(), "never");
+    }
+
+    #[test]
+    fn string_literal_unions_escape_values() {
+        assert_eq!(
+            TsType::string_literals(["plain", "quote\"slash\\", "line\nbreak"]).render(),
+            "\"plain\" | \"quote\\\"slash\\\\\" | \"line\\nbreak\""
+        );
     }
 
     #[test]

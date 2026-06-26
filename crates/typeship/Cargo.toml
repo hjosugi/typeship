@@ -1,6 +1,6 @@
 [package]
 name = "typeship"
-version = "0.1.0"
+version = "0.1.1"
 description = "Backend-agnostic facade that turns serde Rust types into a TypeScript API surface (types, command wrappers, drift-check). MVP wraps ts-rs; designed for Tauri + extension SDKs."
 edition.workspace = true
 license.workspace = true

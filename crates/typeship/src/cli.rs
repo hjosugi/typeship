@@ -94,9 +94,18 @@ pub fn execute(args: &[String], bridge: &Bridge, default_out: &str) -> CliResult
     };
 
     match verb {
-        "help" | "--help" | "-h" => CliResult::usage(0),
+        "help" | "--help" | "-h" => {
+            if rest.is_empty() {
+                CliResult::usage(0)
+            } else {
+                CliResult::fail(2, format!("too many arguments for {verb}\n\n{USAGE}"))
+            }
+        }
         "write" => {
-            let path = rest.first().map(String::as_str).unwrap_or(default_out);
+            let path = match output_path(verb, rest, default_out) {
+                Ok(path) => path,
+                Err(result) => return result,
+            };
             let rendered = bridge.render();
             match rendered.write(path) {
                 Ok(()) => {
@@ -106,7 +115,10 @@ pub fn execute(args: &[String], bridge: &Bridge, default_out: &str) -> CliResult
             }
         }
         "check" => {
-            let path = rest.first().map(String::as_str).unwrap_or(default_out);
+            let path = match output_path(verb, rest, default_out) {
+                Ok(path) => path,
+                Err(result) => return result,
+            };
             let rendered = bridge.render();
             match rendered.check(path) {
                 Ok(outcome) if outcome.is_up_to_date() => CliResult::ok(outcome.summary()),
@@ -118,6 +130,21 @@ pub fn execute(args: &[String], bridge: &Bridge, default_out: &str) -> CliResult
             }
         }
         other => CliResult::fail(2, format!("unknown command: {other}\n\n{USAGE}")),
+    }
+}
+
+fn output_path<'a>(
+    verb: &str,
+    rest: &'a [String],
+    default_out: &'a str,
+) -> Result<&'a str, CliResult> {
+    match rest {
+        [] => Ok(default_out),
+        [path] => Ok(path),
+        _ => Err(CliResult::fail(
+            2,
+            format!("too many arguments for {verb}\n\n{USAGE}"),
+        )),
     }
 }
 
@@ -153,6 +180,20 @@ mod tests {
         let r = execute(&arg("frobnicate"), &sample(), "out.ts");
         assert_eq!(r.code, 2);
         assert!(r.message.contains("unknown command: frobnicate"));
+    }
+
+    #[test]
+    fn write_rejects_extra_args() {
+        let r = execute(&arg("write out.ts extra.ts"), &sample(), "out.ts");
+        assert_eq!(r.code, 2);
+        assert!(r.message.contains("too many arguments for write"));
+    }
+
+    #[test]
+    fn check_rejects_extra_args() {
+        let r = execute(&arg("check out.ts extra.ts"), &sample(), "out.ts");
+        assert_eq!(r.code, 2);
+        assert!(r.message.contains("too many arguments for check"));
     }
 
     #[test]

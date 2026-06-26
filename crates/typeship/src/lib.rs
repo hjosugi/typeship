@@ -73,6 +73,8 @@ pub mod diagnostics;
 pub mod ir;
 pub mod naming;
 
+mod ts;
+
 pub use bridge::{Bridge, Rendered};
 pub use check::CheckOutcome;
 pub use command::{Arg, Command, Transport};
