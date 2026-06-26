@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout typeship
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+
+      - name: Check release tag
+        run: node tools/check-release-tag.mjs "${{ github.ref_name }}"
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      - name: Run tests
+        run: cargo test --workspace
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Package core crate
+        run: cargo package -p typeship
+
+      - name: Publish crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          publish_with_retry() {
+            local package="$1"
+            local attempts="$2"
+
+            for attempt in $(seq 1 "$attempts"); do
+              echo "Publishing ${package} (attempt ${attempt}/${attempts})..."
+              set +e
+              output=$(cargo publish -p "$package" --token "$CARGO_REGISTRY_TOKEN" 2>&1)
+              status=$?
+              set -e
+              echo "$output"
+
+              if [ "$status" -eq 0 ]; then
+                return 0
+              fi
+
+              if echo "$output" | grep -Eiq 'already (uploaded|exists)|crate version .* is already uploaded'; then
+                echo "${package} is already published; continuing."
+                return 0
+              fi
+
+              if [ "$attempt" -lt "$attempts" ]; then
+                sleep 30
+              fi
+            done
+
+            return 1
+          }
+
+          publish_with_retry typeship 3
+          publish_with_retry typeship-ts-rs 12

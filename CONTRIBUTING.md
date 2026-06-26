@@ -19,6 +19,8 @@ cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
+If Node.js is available, `npm run check` runs the same local checks.
+
 ## Design rules
 
 These are load-bearing; a change that breaks one needs a strong reason.
@@ -50,3 +52,14 @@ These are load-bearing; a change that breaks one needs a strong reason.
 - Run `cargo fmt` before committing.
 - Generated/committed artifacts must be regenerated in the same PR that changes
   their source, so the drift check stays green.
+
+## Release hygiene
+
+Use the tag-push release helper rather than publishing manually:
+
+```sh
+npm run release:patch
+```
+
+The helper bumps the Rust crate versions, updates `Cargo.lock`, commits, tags,
+and pushes. The `vX.Y.Z` tag then drives the GitHub Actions publish workflow.

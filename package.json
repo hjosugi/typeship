@@ -1,0 +1,11 @@
+{
+  "name": "typeship-release-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "cargo fmt --all --check && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings",
+    "release:patch": "node tools/release.mjs patch",
+    "release:minor": "node tools/release.mjs minor",
+    "release:major": "node tools/release.mjs major"
+  }
+}

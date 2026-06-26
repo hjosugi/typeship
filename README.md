@@ -88,6 +88,26 @@ cargo package --list
 `cargo package --list` is a useful packaging smoke test because the crate
 manifest points at this README.
 
+## Release
+
+Releases follow the same tag-push flow as `irodori-table`:
+
+```bash
+npm run release:patch
+# or: npm run release:minor / npm run release:major
+# or: node tools/release.mjs 0.2.0
+```
+
+The release helper requires a clean worktree, bumps both crate versions plus the
+`typeship-ts-rs` dependency on `typeship`, refreshes `Cargo.lock`, commits
+`chore: release vX.Y.Z`, creates an annotated `vX.Y.Z` tag, and pushes
+`main --follow-tags`.
+
+Pushing the tag triggers `.github/workflows/release.yml`, which validates the tag
+against the crate manifests and publishes `typeship` followed by
+`typeship-ts-rs` to crates.io. The workflow expects `CARGO_REGISTRY_TOKEN` to be
+configured in the GitHub repository secrets.
+
 ## License
 
 Licensed under either MIT or 0BSD.
