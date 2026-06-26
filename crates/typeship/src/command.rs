@@ -128,9 +128,18 @@ impl Command {
         to_camel_case(&self.rust_name)
     }
 
-    fn render_params(&self) -> String {
-        self.args
+    fn signature_args(&self) -> Vec<&Arg> {
+        let mut args = self
+            .args
             .iter()
+            .filter(|arg| !arg.optional)
+            .collect::<Vec<_>>();
+        args.extend(self.args.iter().filter(|arg| arg.optional));
+        args
+    }
+
+    fn render_params(args: &[&Arg]) -> String {
+        args.iter()
             .map(|arg| {
                 let opt = if arg.optional { "?" } else { "" };
                 format!("{}{opt}: {}", arg.name, arg.ty.render())
@@ -139,13 +148,12 @@ impl Command {
             .join(", ")
     }
 
-    fn render_payload_suffix(&self) -> String {
-        if self.args.is_empty() {
+    fn render_payload_suffix(args: &[&Arg]) -> String {
+        if args.is_empty() {
             return String::new();
         }
 
-        let keys = self
-            .args
+        let keys = args
             .iter()
             .map(|arg| arg.name.as_str())
             .collect::<Vec<_>>()
@@ -155,8 +163,12 @@ impl Command {
 
     /// Render the typed wrapper for the given transport, terminated by a newline.
     pub fn render(&self, transport: Transport) -> String {
-        let params = self.render_params();
-        let payload = self.render_payload_suffix();
+        // Tauri receives a named payload object, so command argument order does not
+        // matter on the wire. The TypeScript function is positional, though, and
+        // optional parameters cannot precede required ones.
+        let signature_args = self.signature_args();
+        let params = Self::render_params(&signature_args);
+        let payload = Self::render_payload_suffix(&signature_args);
         let ret = self.ret.render();
         let name = self.ts_name();
         let key = string_literal(&self.rust_name);
@@ -227,6 +239,27 @@ mod tests {
         assert!(
             ts.contains(
                 "return invoke<QueryResult>(\"db_run_query\", { connectionId, sql, maxRows });"
+            ),
+            "{ts}"
+        );
+    }
+
+    #[test]
+    fn optional_args_move_after_required_args_in_ts_signature() {
+        let ts = Command::new("git_commit_staged", "GitCommandOutput")
+            .arg(Arg::rust("repo_path", TsType::string()).optional())
+            .arg(Arg::new("message", TsType::string()))
+            .render(Transport::Tauri);
+
+        assert!(
+            ts.contains(
+                "export function gitCommitStaged(message: string, repoPath?: string): Promise<GitCommandOutput> {"
+            ),
+            "{ts}"
+        );
+        assert!(
+            ts.contains(
+                "return invoke<GitCommandOutput>(\"git_commit_staged\", { message, repoPath });"
             ),
             "{ts}"
         );
