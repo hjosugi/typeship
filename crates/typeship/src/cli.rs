@@ -63,6 +63,21 @@ impl CliResult {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Verb {
+    Write,
+    Check,
+}
+
+impl Verb {
+    fn name(self) -> &'static str {
+        match self {
+            Verb::Write => "write",
+            Verb::Check => "check",
+        }
+    }
+}
+
 const USAGE: &str = "\
 typeship — assemble a TypeScript API surface from Rust types
 
@@ -88,53 +103,55 @@ pub fn run(bridge: &Bridge, default_out: &str) -> ExitCode {
 /// against `bridge`, performing file IO for `write`/`check`. Returns a
 /// [`CliResult`] instead of exiting, so it is unit-testable.
 pub fn execute(args: &[String], bridge: &Bridge, default_out: &str) -> CliResult {
-    let (verb, rest) = match args.split_first() {
+    let (verb_name, rest) = match args.split_first() {
         Some((v, rest)) => (v.as_str(), rest),
         None => return CliResult::usage(2),
     };
 
-    match verb {
+    match verb_name {
         "help" | "--help" | "-h" => {
             if rest.is_empty() {
                 CliResult::usage(0)
             } else {
-                CliResult::fail(2, format!("too many arguments for {verb}\n\n{USAGE}"))
+                CliResult::fail(2, format!("too many arguments for {verb_name}\n\n{USAGE}"))
             }
         }
-        "write" => {
-            let path = match output_path(verb, rest, default_out) {
-                Ok(path) => path,
-                Err(result) => return result,
-            };
-            let rendered = bridge.render();
-            match rendered.write(path) {
-                Ok(()) => {
-                    CliResult::ok(format!("wrote {path} ({} bytes)", rendered.contents.len()))
-                }
-                Err(e) => CliResult::fail(1, format!("failed to write {path}: {e}")),
-            }
-        }
-        "check" => {
-            let path = match output_path(verb, rest, default_out) {
-                Ok(path) => path,
-                Err(result) => return result,
-            };
-            let rendered = bridge.render();
-            match rendered.check(path) {
-                Ok(outcome) if outcome.is_up_to_date() => CliResult::ok(outcome.summary()),
-                Ok(outcome @ (CheckOutcome::Drift { .. } | CheckOutcome::Missing { .. })) => {
-                    CliResult::fail(1, outcome.summary())
-                }
-                Ok(outcome) => CliResult::ok(outcome.summary()),
-                Err(e) => CliResult::fail(1, format!("failed to read {path}: {e}")),
-            }
-        }
+        "write" => execute_rendered_command(Verb::Write, rest, bridge, default_out),
+        "check" => execute_rendered_command(Verb::Check, rest, bridge, default_out),
         other => CliResult::fail(2, format!("unknown command: {other}\n\n{USAGE}")),
     }
 }
 
+fn execute_rendered_command(
+    verb: Verb,
+    rest: &[String],
+    bridge: &Bridge,
+    default_out: &str,
+) -> CliResult {
+    let path = match output_path(verb, rest, default_out) {
+        Ok(path) => path,
+        Err(result) => return result,
+    };
+    let rendered = bridge.render();
+
+    match verb {
+        Verb::Write => match rendered.write(path) {
+            Ok(()) => CliResult::ok(format!("wrote {path} ({} bytes)", rendered.contents.len())),
+            Err(e) => CliResult::fail(1, format!("failed to write {path}: {e}")),
+        },
+        Verb::Check => match rendered.check(path) {
+            Ok(outcome) if outcome.is_up_to_date() => CliResult::ok(outcome.summary()),
+            Ok(outcome @ (CheckOutcome::Drift { .. } | CheckOutcome::Missing { .. })) => {
+                CliResult::fail(1, outcome.summary())
+            }
+            Ok(outcome) => CliResult::ok(outcome.summary()),
+            Err(e) => CliResult::fail(1, format!("failed to read {path}: {e}")),
+        },
+    }
+}
+
 fn output_path<'a>(
-    verb: &str,
+    verb: Verb,
     rest: &'a [String],
     default_out: &'a str,
 ) -> Result<&'a str, CliResult> {
@@ -143,7 +160,7 @@ fn output_path<'a>(
         [path] => Ok(path),
         _ => Err(CliResult::fail(
             2,
-            format!("too many arguments for {verb}\n\n{USAGE}"),
+            format!("too many arguments for {}\n\n{USAGE}", verb.name()),
         )),
     }
 }
