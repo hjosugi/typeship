@@ -1,18 +1,18 @@
 # Irodori Typeship Handoff
 
-Last checked against `/mnt/data/workspace/irodori-table`: 2026-06-22 JST.
+Last checked against `/mnt/data/workspace/irodori/irodori-table`: 2026-06-27 JST.
 
 `irodori-table` currently generates its desktop TypeScript API with a Rust test
 named `export_typescript_bindings` in:
 
 ```text
-/mnt/data/workspace/irodori-table/apps/desktop/src-tauri/src/lib.rs
+/mnt/data/workspace/irodori/irodori-table/apps/desktop/src-tauri/src/lib.rs
 ```
 
 The generated file consumed by the React app is:
 
 ```text
-/mnt/data/workspace/irodori-table/apps/desktop/src/generated/irodori-api.ts
+/mnt/data/workspace/irodori/irodori-table/apps/desktop/src/generated/irodori-api.ts
 ```
 
 The frontend imports `workspaceSnapshot` and `WorkspaceSnapshot` from that file.
@@ -21,6 +21,11 @@ The generated file now also includes database connection/query types and wrapper
 - `dbConnect(profile: ConnectionProfile): Promise<ConnectionInfo>`
 - `dbRunQuery(connectionId: string, sql: string, maxRows?: number): Promise<QueryResult>`
 - `dbDisconnect(connectionId: string): Promise<void>`
+
+Boundary note: keep `typeship` focused on reusable Rust/TypeScript API surface
+generation, command wrappers, and drift checks. Product UI features such as BI
+panels, ERD layout, query editor affordances, and movable workbench sidebars stay
+in `irodori-table`, where the application state and UX constraints live.
 
 ## Current Contract
 
@@ -61,14 +66,15 @@ The pieces needed to replace Irodori's inline `ts-rs` test now exist:
 - **CLI driver** — `typeship::cli::run(&bridge, default_path)` (zero-dependency,
   in the core crate). Gives a generator binary `write` and `check` verbs with
   correct exit codes, so CI drift becomes a failing build.
-- **Runnable example** — `cargo run -p typeship-ts-rs --example generate -- write
-  <path>` reproduces the Irodori boundary end to end. Its output matches the
-  committed `irodori-api.ts` (plus the `assertNever` helper).
+- **Runnable examples** — `samples/basic-ir` now models a transport-agnostic
+  project operations API, while `samples/tauri-ts-rs` models a desktop
+  data-workbench boundary with connections, query execution, import preview, and
+  dashboard metrics. These are intentionally not Irodori-only samples.
 
 ### Migration — applied
 
 Irodori's desktop crate now generates its boundary through typeship. The change
-(in `/mnt/data/workspace/irodori-table`) is:
+(in `/mnt/data/workspace/irodori/irodori-table`) is:
 
 - `apps/desktop/src-tauri/Cargo.toml` gains two **dev-dependencies** (path deps to
   this sibling project): `typeship` and `typeship-ts-rs`.

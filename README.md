@@ -46,10 +46,12 @@ assert!(ts.contents.contains(
 - `crates/typeship-ts-rs` — the [`ts-rs`](https://github.com/Aleph-Alpha/ts-rs)
   backend adapter. `decl::<T>()` lowers a `#[derive(TS)]` type into a typeship
   declaration. A `specta` / `schemars` adapter could sit alongside it.
-- `samples/basic-ir` — a tiny transport-agnostic API generated from hand-built
-  `typeship` IR.
-- `samples/tauri-ts-rs` — a Tauri-style `invoke` API generated from `ts-rs`
-  derives plus command metadata.
+- `samples/basic-ir` — a transport-agnostic project operations API generated
+  from hand-built `typeship` IR, including closed unions, inline objects,
+  records, optional fields, nullable values, and `bigint` counters.
+- `samples/tauri-ts-rs` — a Tauri-style desktop data-workbench API generated
+  from `ts-rs` derives plus command metadata. It covers connection profiles,
+  environment grouping, query execution, import preview, and dashboard snapshots.
 
 ## Use outside irodori-table
 
@@ -60,6 +62,11 @@ the crate was checked against, but the core API is backend- and transport-light:
 - use `Bridge::fetch()` for a generic `request<T>(command, payload)` client;
 - feed declarations from `typeship-ts-rs`, another future adapter, or hand-built
   `Decl` / `TsType` values.
+
+Keep product features in the application that owns them. For example, BI views,
+ERD layout, query editors, and sidebar placement belong in `irodori-table`;
+`typeship` should stay focused on generated Rust/TypeScript contracts, command
+wrappers, and drift checks that other apps can reuse.
 
 ## Samples
 

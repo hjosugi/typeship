@@ -2,26 +2,74 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
-export type NoteKind = "text" | "sql";
+export type ConnectionEnv = "local" | "dev" | "staging" | "production";
 
-export type NoteStatus = "draft" | "published" | "archived";
+export type DbEngine = "postgres" | "mysql" | "sqlite" | "duckdb";
 
-export type Note = { id: string, title: string, kind: NoteKind, status: NoteStatus, body: string, tags: Array<string>, sourceUrl?: string, };
+export type QueryKind = "select" | "mutation" | "explain";
 
-export type CreateNote = { title: string, kind: NoteKind, body: string, tags: Array<string>, };
+export type ImportFormat = "csv" | "jsonl" | "parquet";
 
-export type SearchNotesParams = { query: string, includeArchived?: boolean, };
+export type DashboardWidgetKind = "metric" | "table" | "barChart" | "lineChart";
 
-export function noteSearch(params?: SearchNotesParams): Promise<Note[]> {
-  return invoke<Note[]>("note_search", { params });
+export type TimeGrain = "hour" | "day" | "week" | "month";
+
+export type ConnectionProfile = { id: string, name: string, engine: DbEngine, env: ConnectionEnv, host?: string, database?: string, url?: string, tags: Array<string>, };
+
+export type EnvironmentGroup = { env: ConnectionEnv, connectionIds: Array<string>, };
+
+export type ColumnInfo = { name: string, dataType: string, nullable: boolean, semanticRole?: string, };
+
+export type QueryRequest = { connectionId: string, sql: string, kind: QueryKind, maxRows?: number, params: Array<string>, };
+
+export type ResultGrid = { columns: Array<ColumnInfo>, rows: Array<Array<string>>, elapsedMs: number, truncated: boolean, warnings: Array<string>, };
+
+export type ImportPreview = { sourceName: string, format: ImportFormat, columns: Array<ColumnInfo>, sampleRows: Array<Array<string>>, warnings: Array<string>, };
+
+export type RecentQuery = { connectionId: string, sql: string, ranAt: string, elapsedMs: number, rowCount: number, };
+
+export type MetricPoint = { label: string, value: number, };
+
+export type DashboardMetric = { id: string, title: string, unit: string, points: Array<MetricPoint>, };
+
+export type DashboardFilter = { field: string, op: string, value: string, };
+
+export type DashboardWidget = { id: string, title: string, kind: DashboardWidgetKind, query: QueryRequest, xField?: string, yField?: string, filters: Array<DashboardFilter>, };
+
+export type DashboardLayout = { columns: number, widgets: Array<DashboardWidget>, defaultTimeGrain: TimeGrain, };
+
+export type SavedDashboard = { id: string, connectionId: string, name: string, ownerId: string, layout: DashboardLayout, updatedAt: string, };
+
+export type DashboardSnapshot = { connectionId: string, generatedAt: string, metrics: Array<DashboardMetric>, };
+
+export type WorkspaceSnapshot = { activeConnectionId?: string, connections: Array<ConnectionProfile>, envGroups: Array<EnvironmentGroup>, recentQueries: Array<RecentQuery>, };
+
+export function workspaceSnapshot(): Promise<WorkspaceSnapshot> {
+  return invoke<WorkspaceSnapshot>("workspace_snapshot");
 }
 
-export function noteCreate(draft: CreateNote): Promise<Note> {
-  return invoke<Note>("note_create", { draft });
+export function connectionSave(profile: ConnectionProfile): Promise<ConnectionProfile> {
+  return invoke<ConnectionProfile>("connection_save", { profile });
 }
 
-export function noteArchive(noteId: string): Promise<void> {
-  return invoke<void>("note_archive", { noteId });
+export function queryRun(request: QueryRequest): Promise<ResultGrid> {
+  return invoke<ResultGrid>("query_run", { request });
+}
+
+export function importPreview(path: string, format?: ImportFormat): Promise<ImportPreview> {
+  return invoke<ImportPreview>("import_preview", { path, format });
+}
+
+export function dashboardSnapshot(connectionId: string, metricWindowDays?: number): Promise<DashboardSnapshot> {
+  return invoke<DashboardSnapshot>("dashboard_snapshot", { connectionId, metricWindowDays });
+}
+
+export function dashboardSave(dashboard: SavedDashboard): Promise<SavedDashboard> {
+  return invoke<SavedDashboard>("dashboard_save", { dashboard });
+}
+
+export function dashboardExport(dashboardId: string, format: string): Promise<string[]> {
+  return invoke<string[]>("dashboard_export", { dashboardId, format });
 }
 
 /**
