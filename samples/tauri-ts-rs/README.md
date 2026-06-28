@@ -9,10 +9,11 @@ This sample mirrors a realistic Tauri desktop app boundary:
 
 The domain is a small data workbench, not a toy note app. It includes saved
 connection profiles grouped by environment, query execution requests/results,
-file import preview, recent query history, saved dashboard layouts, dashboard
-widgets, dashboard filters, metric snapshots, and export commands. That keeps
-the sample useful for apps outside `irodori-table` while still resembling the
-Rust-to-TypeScript boundary that database tools commonly need.
+optional read-only/write-policy capabilities, file import preview, recent query
+history, saved dashboard layouts, dashboard widgets, dashboard filters, metric
+snapshots, and export commands. That keeps the sample useful for apps outside
+`irodori-table` while still resembling the Rust-to-TypeScript boundary that
+database tools commonly need.
 
 From the repository root:
 

@@ -35,6 +35,14 @@ enum QueryKind {
 }
 
 #[derive(TS)]
+#[ts(rename_all = "camelCase")]
+#[allow(dead_code)]
+enum WritePolicy {
+    ReadOnly,
+    ReadWrite,
+}
+
+#[derive(TS)]
 #[ts(rename_all = "lowercase")]
 #[allow(dead_code)]
 enum ImportFormat {
@@ -72,12 +80,28 @@ struct ConnectionProfile {
     engine: DbEngine,
     env: ConnectionEnv,
     #[ts(optional)]
+    capabilities: Option<ConnectionCapabilities>,
+    #[ts(optional)]
+    read_only: Option<bool>,
+    #[ts(optional)]
     host: Option<String>,
     #[ts(optional)]
     database: Option<String>,
     #[ts(optional)]
     url: Option<String>,
     tags: Vec<String>,
+}
+
+#[derive(TS)]
+#[ts(rename_all = "camelCase")]
+#[allow(dead_code)]
+struct ConnectionCapabilities {
+    #[ts(optional)]
+    write_policy: Option<WritePolicy>,
+    #[ts(optional)]
+    can_import: Option<bool>,
+    #[ts(optional)]
+    can_export: Option<bool>,
 }
 
 #[derive(TS)]
@@ -106,6 +130,8 @@ struct QueryRequest {
     connection_id: String,
     sql: String,
     kind: QueryKind,
+    #[ts(optional)]
+    allow_writes: Option<bool>,
     #[ts(optional)]
     max_rows: Option<u32>,
     params: Vec<String>,
@@ -233,10 +259,12 @@ fn build_bridge() -> Bridge {
         .decl(&decl::<ConnectionEnv>())
         .decl(&decl::<DbEngine>())
         .decl(&decl::<QueryKind>())
+        .decl(&decl::<WritePolicy>())
         .decl(&decl::<ImportFormat>())
         .decl(&decl::<DashboardWidgetKind>())
         .decl(&decl::<TimeGrain>())
         .decl(&decl::<ConnectionProfile>())
+        .decl(&decl::<ConnectionCapabilities>())
         .decl(&decl::<EnvironmentGroup>())
         .decl(&decl::<ColumnInfo>())
         .decl(&decl::<QueryRequest>())

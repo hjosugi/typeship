@@ -8,19 +8,23 @@ export type DbEngine = "postgres" | "mysql" | "sqlite" | "duckdb";
 
 export type QueryKind = "select" | "mutation" | "explain";
 
+export type WritePolicy = "readOnly" | "readWrite";
+
 export type ImportFormat = "csv" | "jsonl" | "parquet";
 
 export type DashboardWidgetKind = "metric" | "table" | "barChart" | "lineChart";
 
 export type TimeGrain = "hour" | "day" | "week" | "month";
 
-export type ConnectionProfile = { id: string, name: string, engine: DbEngine, env: ConnectionEnv, host?: string, database?: string, url?: string, tags: Array<string>, };
+export type ConnectionProfile = { id: string, name: string, engine: DbEngine, env: ConnectionEnv, capabilities?: ConnectionCapabilities, readOnly?: boolean, host?: string, database?: string, url?: string, tags: Array<string>, };
+
+export type ConnectionCapabilities = { writePolicy?: WritePolicy, canImport?: boolean, canExport?: boolean, };
 
 export type EnvironmentGroup = { env: ConnectionEnv, connectionIds: Array<string>, };
 
 export type ColumnInfo = { name: string, dataType: string, nullable: boolean, semanticRole?: string, };
 
-export type QueryRequest = { connectionId: string, sql: string, kind: QueryKind, maxRows?: number, params: Array<string>, };
+export type QueryRequest = { connectionId: string, sql: string, kind: QueryKind, allowWrites?: boolean, maxRows?: number, params: Array<string>, };
 
 export type ResultGrid = { columns: Array<ColumnInfo>, rows: Array<Array<string>>, elapsedMs: number, truncated: boolean, warnings: Array<string>, };
 

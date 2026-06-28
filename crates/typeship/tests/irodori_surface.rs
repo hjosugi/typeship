@@ -84,6 +84,9 @@ fn render_irodori() -> String {
             Field::rust("url", TsType::string())
                 .optional()
                 .with_docs("Raw connection URL/DSN. Overrides the structured fields when present."),
+            Field::rust("read_only", TsType::boolean())
+                .optional()
+                .with_docs("When true, frontend actions and backend commands must reject writes."),
         ],
     );
     let connection_info = Decl::interface(
@@ -167,6 +170,7 @@ fn reproduces_irodori_boundary() {
     // Option<String> -> optional key, not `string | null`.
     assert!(ts.contains("rows?: string;"), "{ts}");
     assert!(ts.contains("host?: string;"), "{ts}");
+    assert!(ts.contains("readOnly?: boolean;"), "{ts}");
     assert!(ts.contains("message?: string;"), "{ts}");
 
     // Vec<T> -> T[].

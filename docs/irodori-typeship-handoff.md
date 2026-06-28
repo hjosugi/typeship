@@ -26,6 +26,8 @@ Boundary note: keep `typeship` focused on reusable Rust/TypeScript API surface
 generation, command wrappers, and drift checks. Product UI features such as BI
 panels, ERD layout, query editor affordances, and movable workbench sidebars stay
 in `irodori-table`, where the application state and UX constraints live.
+Reusable contract fields, such as `ConnectionProfile.readOnly`, are fine in
+`typeship` samples; enforcement remains an Irodori backend/UI responsibility.
 
 ## Current Contract
 
@@ -37,7 +39,8 @@ It covers:
 
 - `DbObjectKind` and `ConnectionStatus` as closed string-literal unions;
 - `DbObject`, `Connection`, and `WorkspaceSnapshot`;
-- `DbEngine`, `ConnectionProfile`, `ConnectionInfo`, and `QueryResult`;
+- `DbEngine`, `ConnectionProfile` including optional `readOnly`, `ConnectionInfo`,
+  and `QueryResult`;
 - `JsonValue = unknown`;
 - `u64`-style counters represented as `bigint`;
 - optional fields and optional command parameters;
@@ -69,9 +72,10 @@ The pieces needed to replace Irodori's inline `ts-rs` test now exist:
 - **Runnable examples** — `samples/basic-ir` now models a transport-agnostic
   project operations API with milestone reports, bulk status updates, audit
   events, and analytics snapshots. `samples/tauri-ts-rs` models a desktop
-  data-workbench boundary with connections, query execution, import preview,
-  recent history, saved dashboard layouts, widgets, filters, metric snapshots,
-  and export commands. These are intentionally not Irodori-only samples.
+  data-workbench boundary with connections, optional read-only/write-policy
+  capabilities, query execution, import preview, recent history, saved dashboard
+  layouts, widgets, filters, metric snapshots, and export commands. These are
+  intentionally not Irodori-only samples.
 
 ### Migration — applied
 

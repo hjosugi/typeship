@@ -52,8 +52,9 @@ assert!(ts.contents.contains(
   nullable values, and `bigint` counters.
 - `samples/tauri-ts-rs` — a Tauri-style desktop data-workbench API generated
   from `ts-rs` derives plus command metadata. It covers connection profiles,
-  environment grouping, query execution, import preview, saved dashboard
-  layouts, dashboard widgets, filters, metric snapshots, and export commands.
+  optional read-only capabilities, environment grouping, query execution,
+  import preview, saved dashboard layouts, dashboard widgets, filters, metric
+  snapshots, and export commands.
 
 ## Use outside irodori-table
 
@@ -68,7 +69,9 @@ the crate was checked against, but the core API is backend- and transport-light:
 Keep product features in the application that owns them. For example, BI views,
 ERD layout, query editors, and sidebar placement belong in `irodori-table`;
 `typeship` should stay focused on generated Rust/TypeScript contracts, command
-wrappers, and drift checks that other apps can reuse.
+wrappers, and drift checks that other apps can reuse. It can model reusable
+contract concepts such as `readOnly` / `writePolicy`, but it should not decide
+how an application enforces those policies.
 
 ## Samples
 
