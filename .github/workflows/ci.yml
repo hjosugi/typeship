@@ -35,6 +35,3 @@ jobs:
 
       - name: Package core crate
         run: cargo package -p typeship
-
-      - name: Package ts-rs adapter crate
-        run: cargo package -p typeship-ts-rs

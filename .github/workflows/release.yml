@@ -38,9 +38,6 @@ jobs:
       - name: Package core crate
         run: cargo package -p typeship
 
-      - name: Package ts-rs adapter crate
-        run: cargo package -p typeship-ts-rs
-
       - name: Publish crates
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
