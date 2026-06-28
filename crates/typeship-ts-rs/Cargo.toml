@@ -1,6 +1,6 @@
 [package]
 name = "typeship-ts-rs"
-version = "0.1.2"
+version = "0.1.3"
 description = "ts-rs backend adapter for typeship: lower `#[derive(TS)]` Rust types into typeship declarations the Bridge can assemble, check, and write."
 edition.workspace = true
 license.workspace = true
@@ -14,7 +14,7 @@ categories = ["development-tools"]
 
 [dependencies]
 # Path for local dev; version is required so the crate can be published to a registry.
-typeship = { path = "../typeship", version = "0.1.2" }
+typeship = { path = "../typeship", version = "0.1.3" }
 ts-rs = "12"
 
 [dev-dependencies]
