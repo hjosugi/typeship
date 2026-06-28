@@ -129,11 +129,12 @@ surface reusable for other Rust + TypeScript applications:
 ```bash
 npm run check
 cargo package -p typeship
+cargo package -p typeship-ts-rs
 ```
 
 `npm run check` runs formatting, all workspace tests, clippy, and the committed
-sample drift checks. `cargo package -p typeship` is a useful packaging smoke test
-because the core crate manifest points at this README.
+sample drift checks. The `cargo package` commands are useful packaging smoke
+tests for both published crates.
 
 ## Release
 

@@ -156,7 +156,15 @@ export function compareSemver(left, right) {
 }
 
 export function gitTagExists(tagName) {
-  return exec(`git tag --list ${shellQuote(tagName)}`).trim() === tagName;
+  const localTag = exec(`git tag --list ${shellQuote(tagName)}`).trim();
+  if (localTag === tagName) {
+    return true;
+  }
+
+  const remoteTag = exec(
+    `git ls-remote --tags origin ${shellQuote(`refs/tags/${tagName}`)}`,
+  ).trim();
+  return remoteTag.length > 0;
 }
 
 export function run(command) {

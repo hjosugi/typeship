@@ -39,7 +39,7 @@ if (compareSemver(parseSemver(newVersion), parseSemver(currentVersion)) <= 0) {
 }
 
 if (gitTagExists(tagName)) {
-  fail(`Tag already exists: ${tagName}`);
+  fail(`Tag already exists locally or on origin: ${tagName}`);
 }
 
 console.log(`Bumping version from ${currentVersion} to ${newVersion}...`);

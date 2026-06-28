@@ -33,7 +33,23 @@ pub(crate) fn string_literal(value: &str) -> String {
 
 /// Render a single-line JSDoc comment.
 pub(crate) fn doc_comment(docs: &str) -> String {
-    format!("/** {docs} */")
+    let mut out = String::with_capacity(docs.len() + 7);
+    out.push_str("/** ");
+
+    let mut chars = docs.chars().peekable();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\n' | '\r' | '\u{2028}' | '\u{2029}' => out.push(' '),
+            '*' if chars.peek() == Some(&'/') => {
+                out.push_str("* /");
+                let _ = chars.next();
+            }
+            ch => out.push(ch),
+        }
+    }
+
+    out.push_str(" */");
+    out
 }
 
 /// A deterministic TypeScript module assembled from already-rendered blocks.
@@ -93,5 +109,13 @@ mod tests {
     #[test]
     fn doc_comment_is_single_line_jsdoc() {
         assert_eq!(doc_comment("hello"), "/** hello */");
+    }
+
+    #[test]
+    fn doc_comment_neutralizes_comment_end_and_line_breaks() {
+        assert_eq!(
+            doc_comment("line one\nline two */ still docs"),
+            "/** line one line two * / still docs */"
+        );
     }
 }
