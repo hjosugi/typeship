@@ -6,7 +6,6 @@ edition.workspace = true
 license.workspace = true
 rust-version = "1.78.0"
 
-license = "0BSD"
 [dependencies]
 typeship = { path = "../../crates/typeship" }
 typeship-ts-rs = { path = "../../crates/typeship-ts-rs" }

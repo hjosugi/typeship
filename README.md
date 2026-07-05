@@ -162,8 +162,8 @@ configured in the GitHub repository secrets.
 0BSD. You can use, copy, modify, and distribute this project for almost any purpose.
 
 
-Irodori-authored code in this repository is available under `MIT OR 0BSD` unless
-a file says otherwise. See [LICENSE](LICENSE).
+Irodori-authored code in this repository is available under `0BSD` unless a file
+says otherwise. See [LICENSE](LICENSE).
 
 ## Disclaimer
 

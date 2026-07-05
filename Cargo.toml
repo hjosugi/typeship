@@ -4,7 +4,7 @@ members = ["crates/*", "samples/*"]
 
 [workspace.package]
 edition = "2021"
-license = "MIT OR 0BSD"
+license = "0BSD"
 repository = "https://github.com/hjosugi/typeship"
 authors = ["typeship contributors"]
 rust-version = "1.74"

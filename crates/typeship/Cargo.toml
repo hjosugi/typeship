@@ -13,7 +13,6 @@ categories = ["development-tools", "encoding"]
 
 # Core stays zero-dependency on purpose. Backends (ts-rs, specta, schemars) live in
 # separate adapter crates so consumers only pay for the backend they pick.
-license = "0BSD"
 [dependencies]
 
 [dev-dependencies]

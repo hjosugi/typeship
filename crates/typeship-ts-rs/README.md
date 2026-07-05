@@ -36,4 +36,4 @@ this one.
 
 ## License
 
-Licensed under either MIT or 0BSD.
+Licensed under 0BSD.
