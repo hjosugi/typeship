@@ -1,7 +1,7 @@
 {
   "name": "typeship-release-tools",
   "private": true,
-  "license": "MIT OR 0BSD",
+  "license": "0BSD",
   "type": "module",
   "scripts": {
     "check": "cargo fmt --all --check && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings && npm run samples:check",
