@@ -1,3 +1,6 @@
+<!-- i18n: language-switcher -->
+[English](design-fp-principles.md) | [日本語](design-fp-principles.ja.md)
+
 # Functional Codegen Principles
 
 `typeship` follows the same broad shape as tools such as `purescript-bridge`,

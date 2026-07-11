@@ -1,3 +1,6 @@
+<!-- i18n: language-switcher -->
+[English](irodori-typeship-handoff.md) | [日本語](irodori-typeship-handoff.ja.md)
+
 # Irodori Typeship Handoff
 
 Last checked against `/mnt/data/workspace/irodori/irodori-table`: 2026-06-27 JST.
