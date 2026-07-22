@@ -144,7 +144,7 @@ Releases follow the same tag-push flow as `irodori-table`:
 ```bash
 npm run release:patch
 # or: npm run release:minor / npm run release:major
-# or: node tools/release.mjs 0.2.0
+# or: node tools/release.mjs 0.2.1
 ```
 
 The release helper requires a clean worktree, bumps both crate versions plus the

@@ -139,7 +139,7 @@ dependencies = [
 
 [[package]]
 name = "typeship"
-version = "0.2.0"
+version = "0.2.1"
 
 [[package]]
 name = "typeship-sample-basic-ir"
@@ -159,7 +159,7 @@ dependencies = [
 
 [[package]]
 name = "typeship-ts-rs"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "serde",
  "serde_json",
