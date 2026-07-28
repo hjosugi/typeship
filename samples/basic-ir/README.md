@@ -1,3 +1,6 @@
+<!-- i18n: language-switcher -->
+[English](README.md) | [日本語](README.ja.md)
+
 # Basic IR Sample
 
 This sample uses only the zero-dependency `typeship` core crate. It hand-builds
