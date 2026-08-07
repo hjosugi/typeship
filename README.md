@@ -173,4 +173,4 @@ says otherwise. See [LICENSE](LICENSE).
 `typeship` generates TypeScript bindings from Rust APIs, but generated code
 still needs review before publishing or wiring into release checks. For the
 broader Irodori product disclaimer, see
-<https://hjosugi.github.io/irodori-docs/disclaimer.html>.
+<https://irodori-table.github.io/irodori-docs/disclaimer.html>.
