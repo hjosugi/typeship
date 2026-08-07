@@ -10,7 +10,9 @@
     "ts:check": "tsc -p fixtures/complex/ts-consumer/tsconfig.json",
     "release:patch": "node tools/release.mjs patch",
     "release:minor": "node tools/release.mjs minor",
-    "release:major": "node tools/release.mjs major"
+    "release:major": "node tools/release.mjs major",
+    "graphify:setup": "sh scripts/graphify.sh setup",
+    "graphify:update": "sh scripts/graphify.sh update"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
