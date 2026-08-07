@@ -73,6 +73,32 @@ fn names_that_cannot_bind_are_refused() {
 }
 
 #[test]
+fn field_names_are_quoted_rather_than_refused() {
+    // A serde `rename` can put anything in the JSON, and TypeScript can say it.
+    let rendered = Bridge::tauri()
+        .decl(&Decl::interface(
+            "Weird",
+            [
+                Field::new("kebab-case", TsType::string()),
+                Field::new("okName", TsType::number()),
+            ],
+        ))
+        .try_render()
+        .expect("a quotable key is not a defect");
+
+    assert!(
+        rendered.contents.contains("  \"kebab-case\": string;"),
+        "{}",
+        rendered.contents
+    );
+    assert!(
+        rendered.contents.contains("  okName: number;"),
+        "identifier keys must stay bare: {}",
+        rendered.contents
+    );
+}
+
+#[test]
 fn a_clean_bridge_still_renders() {
     let rendered = Bridge::tauri()
         .decl(&Decl::interface(

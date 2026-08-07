@@ -1,6 +1,6 @@
 use super::TsType;
 use crate::naming::to_camel_case;
-use crate::ts::doc_comment;
+use crate::ts::{doc_comment, property_key};
 
 /// A named field of a record (struct field, or a member of an inline object).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -47,16 +47,27 @@ impl Field {
         self
     }
 
-    /// Render as a single inline member: `name: T` (no trailing punctuation).
+    /// Render as a single inline member: `name: T;`, preceded by its doc comment
+    /// when it has one. The trailing `;` separates members inside the one-line
+    /// object literal [`crate::ir::TsType::Object`] builds.
     pub(super) fn render_inline(&self) -> String {
         let opt = if self.optional { "?" } else { "" };
-        format!("{}{}: {};", self.name, opt, self.ty.render())
+        let member = format!("{}{}: {};", property_key(&self.name), opt, self.ty.render());
+        match &self.docs {
+            Some(docs) => format!("{} {member}", doc_comment(docs)),
+            None => member,
+        }
     }
 
     /// Render as an indented interface member, with an optional doc comment.
     fn render_member(&self, indent: &str) -> String {
         let opt = if self.optional { "?" } else { "" };
-        let line = format!("{indent}{}{}: {};", self.name, opt, self.ty.render());
+        let line = format!(
+            "{indent}{}{}: {};",
+            property_key(&self.name),
+            opt,
+            self.ty.render()
+        );
         match &self.docs {
             Some(docs) => format!("{indent}{}\n{line}", doc_comment(docs)),
             None => line,
@@ -190,6 +201,40 @@ mod tests {
         assert_eq!(
             decl.render(),
             "export type ConnectionStatus = \"connected\" | \"idle\" | \"error\";\n"
+        );
+    }
+
+    #[test]
+    fn wire_keys_that_are_not_identifiers_are_quoted() {
+        // What `#[serde(rename = "kebab-case")]` produces. Unquoted, this is a
+        // syntax error; quoted, it is the exact wire key.
+        let decl = Decl::interface(
+            "Weird",
+            [
+                Field::new("kebab-case", TsType::string()),
+                Field::new("", TsType::boolean()).optional(),
+                // Reserved words are legal as keys and must stay bare.
+                Field::new("function", TsType::number()),
+            ],
+        );
+        let ts = decl.render();
+        assert!(ts.contains("  \"kebab-case\": string;"), "{ts}");
+        assert!(ts.contains("  \"\"?: boolean;"), "{ts}");
+        assert!(ts.contains("  function: number;"), "{ts}");
+    }
+
+    #[test]
+    fn inline_object_fields_keep_their_docs() {
+        let decl = Decl::alias(
+            "Outer",
+            TsType::object([
+                Field::new("x", TsType::string()).with_docs("the x"),
+                Field::new("y", TsType::number()),
+            ]),
+        );
+        assert_eq!(
+            decl.render(),
+            "export type Outer = { /** the x */ x: string; y: number; };\n"
         );
     }
 

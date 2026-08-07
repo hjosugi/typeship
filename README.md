@@ -114,6 +114,10 @@ both become `col1`), or a name that cannot bind (`kebab-case`, a reserved word
 such as `function`, or an empty one). `Bridge::try_render` exposes the same check
 programmatically; `Bridge::defects` returns the list without rendering.
 
+Member *keys* are the deliberate exception: a wire key is whatever serde puts in
+the JSON, so `#[serde(rename = "kebab-case")]` renders as `"kebab-case": T`
+rather than being rejected.
+
 See the end-to-end example (ts-rs types → assembly → CLI):
 
 ```sh

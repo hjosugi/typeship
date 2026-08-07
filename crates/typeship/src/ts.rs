@@ -107,10 +107,24 @@ pub(crate) fn is_identifier(name: &str) -> bool {
 ///
 /// Stricter than [`is_identifier`]: a reserved word has identifier shape but
 /// cannot be bound, so `export type void = …` and `function f(new: string)` are
-/// both syntax errors. Member keys are the exception — `{ new: string }` is
-/// perfectly legal — so they do not go through this check.
+/// both syntax errors. Property keys are the exception and use
+/// [`property_key`] instead — `{ new: string }` is perfectly legal.
 pub(crate) fn is_bindable_identifier(name: &str) -> bool {
     is_identifier(name) && !RESERVED_WORDS.contains(&name)
+}
+
+/// Render `name` as an object or interface member key, quoting it when it cannot
+/// appear bare.
+///
+/// A wire key is whatever serde puts in the JSON — `#[serde(rename = "kebab-case")]`
+/// is legitimate, and TypeScript can express it exactly as `"kebab-case": T`.
+/// Quoting is therefore the faithful encoding, not a workaround.
+pub(crate) fn property_key(name: &str) -> String {
+    if is_identifier(name) {
+        name.to_string()
+    } else {
+        string_literal(name)
+    }
 }
 
 /// Render a single-line JSDoc comment.
@@ -206,6 +220,17 @@ mod tests {
         }
         assert!(is_bindable_identifier("rowCount"));
         assert!(!is_bindable_identifier(""));
+    }
+
+    #[test]
+    fn property_keys_are_quoted_only_when_they_must_be() {
+        assert_eq!(property_key("rowCount"), "rowCount");
+        // Reserved words are legal as keys, so they stay bare.
+        assert_eq!(property_key("function"), "function");
+        assert_eq!(property_key("kebab-case"), "\"kebab-case\"");
+        assert_eq!(property_key(""), "\"\"");
+        // The quoting reuses the value escaper, so hostile keys stay data.
+        assert_eq!(property_key("a\"b"), "\"a\\\"b\"");
     }
 
     #[test]

@@ -12,7 +12,9 @@
 //!   neither, and the output is a syntax error.
 //!
 //! Member *keys* are the deliberate exception: a wire key is whatever serde puts
-//! in the JSON and TypeScript can quote it, so they are never reported here.
+//! in the JSON, and TypeScript can quote it (`"kebab-case": T`), so
+//! [`crate::ts::property_key`] encodes those faithfully instead of reporting
+//! them here.
 //!
 //! The scan is a pure function of the [`Bridge`] value, so it costs no IO and
 //! runs before a single byte is written.
