@@ -71,8 +71,9 @@ impl Bridge {
         Bridge::new(Transport::Fetch)
     }
 
-    /// Override the generated-file header (provide the comment text *without* a
-    /// trailing newline; lines are emitted verbatim).
+    /// Override the generated-file header. Lines are emitted verbatim; trailing
+    /// whitespace is trimmed so the block separator stays the renderer's job, and
+    /// an empty header omits the block entirely.
     pub fn header(mut self, header: impl Into<String>) -> Self {
         self.header = header.into();
         self
@@ -137,7 +138,11 @@ impl Bridge {
     /// that it compiles — see [`Bridge::try_render`] for the checked variant.
     pub fn render(&self) -> Rendered {
         let mut module = TsModule::new();
-        module.push(self.header.clone());
+        // The header goes through the same normalisation as every other block, so
+        // a stray trailing newline cannot open a second gap under it.
+        if !self.header.trim_end().is_empty() {
+            module.push_rendered(&self.header);
+        }
 
         if !self.commands.is_empty() {
             if let Some(import) = self.transport.import_line() {
@@ -218,6 +223,18 @@ mod tests {
         assert!(on
             .contents
             .contains("export function assertNever(value: never): never"));
+    }
+
+    #[test]
+    fn header_is_normalised_like_every_other_block() {
+        let decl = Decl::alias("A", TsType::string());
+
+        let trailing = Bridge::tauri().header("// h\n").decl(&decl).render();
+        assert_eq!(trailing.contents, "// h\n\nexport type A = string;\n");
+
+        // An empty header means "no header", not "a blank block".
+        let empty = Bridge::tauri().header("").decl(&decl).render();
+        assert_eq!(empty.contents, "export type A = string;\n");
     }
 
     #[test]
