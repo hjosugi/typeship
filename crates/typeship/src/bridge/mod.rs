@@ -10,12 +10,14 @@
 //! [`ts-rs`]: https://github.com/Aleph-Alpha/ts-rs
 //! [`specta`]: https://github.com/specta-rs/specta
 
+mod defects;
 mod rendered;
 
 use crate::command::{Command, Transport};
 use crate::ir::Decl;
 use crate::ts::TsModule;
 
+pub use defects::{Defect, DefectKind};
 pub use rendered::Rendered;
 
 /// The default header stamped onto generated files. Mirrors the convention the
@@ -104,7 +106,35 @@ impl Bridge {
         self
     }
 
-    /// Render the assembled module into a [`Rendered`] value.
+    /// Scan for anything that would keep the rendered module from compiling —
+    /// an identifier emitted twice (two declarations with one name, two commands
+    /// lowering to one function, two fields or arguments colliding through the
+    /// naming isomorphism), or a name that cannot bind at all. An empty result
+    /// means the module is well-formed.
+    ///
+    /// Pure: no IO, no rendering. See [`Bridge::try_render`] for the checked
+    /// render path.
+    pub fn defects(&self) -> Vec<Defect> {
+        defects::scan(&self.decls, &self.commands)
+    }
+
+    /// Render, or refuse with the defects that would make the output invalid
+    /// TypeScript.
+    ///
+    /// Prefer this over [`Bridge::render`] anywhere the result is written to
+    /// disk: a duplicate identifier is a `tsc` error in the *consumer's* build,
+    /// which is exactly the class of failure this crate exists to move earlier.
+    pub fn try_render(&self) -> Result<Rendered, Vec<Defect>> {
+        let defects = self.defects();
+        if defects.is_empty() {
+            Ok(self.render())
+        } else {
+            Err(defects)
+        }
+    }
+
+    /// Render the assembled module into a [`Rendered`] value, without checking
+    /// that it compiles — see [`Bridge::try_render`] for the checked variant.
     pub fn render(&self) -> Rendered {
         let mut module = TsModule::new();
         module.push(self.header.clone());

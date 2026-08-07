@@ -75,6 +75,6 @@ pub mod naming;
 
 mod ts;
 
-pub use bridge::{Bridge, Rendered};
+pub use bridge::{Bridge, Defect, DefectKind, Rendered};
 pub use check::CheckOutcome;
 pub use command::{Arg, Command, Transport};

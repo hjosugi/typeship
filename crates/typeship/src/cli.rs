@@ -20,7 +20,7 @@
 
 use std::process::ExitCode;
 
-use crate::bridge::Bridge;
+use crate::bridge::{Bridge, Defect};
 use crate::check::CheckOutcome;
 
 /// The result of a CLI invocation: a process exit code plus a human message.
@@ -29,7 +29,8 @@ use crate::check::CheckOutcome;
 /// only adds argv reading and printing on top.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CliResult {
-    /// `0` success, `1` drift/missing on `check`, `2` usage error.
+    /// `0` success, `1` drift/missing on `check`, `2` usage error or an invalid
+    /// bridge definition (duplicate identifiers).
     pub code: u8,
     /// Message to print (stdout when `code == 0`, stderr otherwise).
     pub message: String,
@@ -132,7 +133,10 @@ fn execute_rendered_command(
         Ok(path) => path,
         Err(result) => return result,
     };
-    let rendered = bridge.render();
+    let rendered = match bridge.try_render() {
+        Ok(rendered) => rendered,
+        Err(defects) => return defect_failure(&defects),
+    };
 
     match verb {
         Verb::Write => match rendered.write(path) {
@@ -148,6 +152,19 @@ fn execute_rendered_command(
             Err(e) => CliResult::fail(1, format!("failed to read {path}: {e}")),
         },
     }
+}
+
+/// A bridge that would render uncompilable TypeScript is a definition error, not
+/// a drift: neither `write` nor `check` can produce a meaningful answer, so both
+/// stop before touching the file and report every defect at once.
+fn defect_failure(defects: &[Defect]) -> CliResult {
+    let mut message = String::from("invalid bridge: the rendered TypeScript would not compile\n");
+    for defect in defects {
+        message.push_str("  ");
+        message.push_str(&defect.render());
+        message.push('\n');
+    }
+    CliResult::fail(2, message.trim_end())
 }
 
 fn output_path<'a>(

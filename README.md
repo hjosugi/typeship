@@ -107,6 +107,13 @@ fn main() -> std::process::ExitCode {
 }
 ```
 
+Both verbs refuse to run (exit `2`) when the bridge would render TypeScript that
+does not compile — a duplicate identifier (two declarations sharing a name, or
+two fields colliding through the naming isomorphism, where `col_1` and `col1`
+both become `col1`), or a name that cannot bind (`kebab-case`, a reserved word
+such as `function`, or an empty one). `Bridge::try_render` exposes the same check
+programmatically; `Bridge::defects` returns the list without rendering.
+
 See the end-to-end example (ts-rs types → assembly → CLI):
 
 ```sh
@@ -137,10 +144,10 @@ cargo package -p typeship
 `npm run check` runs formatting, all workspace tests, clippy, the committed
 sample drift checks, and `tsc --strict` over every generated file and fixture
 (`npm run ts:check`) — a codegen tool should prove its own output compiles.
-`cargo package -p typeship` is a useful packaging smoke test
-because the core crate manifest points at this README. The adapter crate is
-verified by the release workflow's `cargo publish -p typeship-ts-rs` step after
-the matching core crate version has reached crates.io.
+`cargo package -p typeship` is a useful packaging smoke test because the core
+crate manifest points at this README. The adapter crate is verified by the
+release workflow's `cargo publish -p typeship-ts-rs` step after the matching
+core crate version has reached crates.io.
 
 ## Release
 
