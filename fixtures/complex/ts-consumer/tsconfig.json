@@ -7,5 +7,10 @@
     "moduleResolution": "Bundler",
     "skipLibCheck": true
   },
-  "include": ["./*.ts", "../expected/*.ts"]
+  "include": [
+    "./*.ts",
+    "../expected/*.ts",
+    "../../../samples/basic-ir/generated/*.ts",
+    "../../../samples/tauri-ts-rs/generated/*.ts"
+  ]
 }

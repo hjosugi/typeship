@@ -112,7 +112,7 @@ npm run check
 cargo package -p typeship
 ```
 
-`npm run check`はフォーマット、すべてのワークスペーステスト、クリッピー、コミットされたサンプルのドリフトチェックを実行します。`cargo package -p typeship`は、コアクレートマニフェストがこのREADMEを指しているため、有用なパッケージングスモークテストです。アダプタークレートは、対応するコアクレートバージョンがcrates.ioに到達した後、リリースワークフローの`cargo publish -p typeship-ts-rs`ステップによって検証されます。
+`npm run check`はフォーマット、すべてのワークスペーステスト、クリッピー、コミットされたサンプルのドリフトチェック、そして生成されたすべてのファイルとフィクスチャに対する`tsc --strict`（`npm run ts:check`）を実行します — コード生成ツールは自身の出力がコンパイルできることを証明すべきです。`cargo package -p typeship`は、コアクレートマニフェストがこのREADMEを指しているため、有用なパッケージングスモークテストです。アダプタークレートは、対応するコアクレートバージョンがcrates.ioに到達した後、リリースワークフローの`cargo publish -p typeship-ts-rs`ステップによって検証されます。
 
 ## リリース
 

@@ -19,7 +19,8 @@ cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-If Node.js is available, `npm run check` runs the same local checks.
+If Node.js is available, `npm ci && npm run check` runs the same local checks
+plus the sample drift checks and `tsc --strict` over the generated TypeScript.
 CI runs `npm run check` on every push and pull request, plus a core crate
 packaging smoke test.
 

@@ -134,8 +134,10 @@ npm run check
 cargo package -p typeship
 ```
 
-`npm run check` runs formatting, all workspace tests, clippy, and the committed
-sample drift checks. `cargo package -p typeship` is a useful packaging smoke test
+`npm run check` runs formatting, all workspace tests, clippy, the committed
+sample drift checks, and `tsc --strict` over every generated file and fixture
+(`npm run ts:check`) — a codegen tool should prove its own output compiles.
+`cargo package -p typeship` is a useful packaging smoke test
 because the core crate manifest points at this README. The adapter crate is
 verified by the release workflow's `cargo publish -p typeship-ts-rs` step after
 the matching core crate version has reached crates.io.
