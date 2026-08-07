@@ -136,4 +136,4 @@ npm run release:patch
 
 ## 免責事項
 
-`typeship`はRust APIからTypeScriptバインディングを生成しますが、生成されたコードは公開またはリリースチェックに配線する前にレビューが必要です。より広範なIrodori製品の免責事項については、<https://hjosugi.github.io/irodori-docs/disclaimer.html>を参照してください。
+`typeship`はRust APIからTypeScriptバインディングを生成しますが、生成されたコードは公開またはリリースチェックに配線する前にレビューが必要です。より広範なIrodori製品の免責事項については、<https://irodori-table.github.io/irodori-docs/disclaimer.html>を参照してください。
